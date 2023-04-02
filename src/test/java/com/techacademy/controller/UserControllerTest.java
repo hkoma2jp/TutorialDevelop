@@ -1,11 +1,14 @@
 package com.techacademy.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -62,4 +65,26 @@ class UserControllerTest {
         assertEquals(user.getName(), "キラメキ太郎");
     }
 
+    @Test
+    @DisplayName("User一覧画面")
+    @WithMockUser
+    void testGetList() throws Exception {
+        // HTTPリクエストに対するレスポンスの検証
+        MvcResult result = mockMvc.perform(get("/user/list"))
+                .andExpect(status().isOk()) // HTTPステータスが200OKであること
+                .andExpect(model().attributeExists("userlist")) // Modelにuserlistが含まれていること
+                .andExpect(model().hasNoErrors()) // Modelにエラーが無いこと
+                .andExpect(view().name("user/list")) // viewの名前が user/list であること
+                .andReturn();
+        // userの検証
+        // Modelからuserlistを取り出す
+        List<User> userlist = (List<User>)result.getModelAndView().getModel().get("userlist");
+        // - 件数が3件であること
+        assertEquals(userlist.size(), 3);
+        // - userlistから1件ずつ取り出し、idとnameを検証する
+        for (int i = 0; i< userlist.size(); i++) {
+            assertEquals(userlist.get(i).getId(),i + 1);
+            assertNotNull(userlist.get(i).getName());
+        }
+    }
 }
